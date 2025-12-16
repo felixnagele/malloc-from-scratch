@@ -1,4 +1,6 @@
-file(GLOB TEST_SOURCES "test_*.cpp")
+# Automatic reconfigure for new tests (CMake 3.12+)
+file(GLOB TEST_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/test_*.cpp")
+message(STATUS "Found tests: ${TEST_SOURCES}")
 
 foreach(test_file ${TEST_SOURCES})
     get_filename_component(test_name ${test_file} NAME_WE)
