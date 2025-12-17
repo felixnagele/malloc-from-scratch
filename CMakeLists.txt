@@ -1,3 +1,5 @@
+# CMakeLists.txt
+
 cmake_minimum_required(VERSION 3.14)
 project(malloc-from-scratch VERSION 1.0.0 LANGUAGES CXX)
 
@@ -14,12 +16,11 @@ endif()
 set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -Wall -Wextra -Wpedantic")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
 
-add_library(${PROJECT_NAME} STATIC
-    src/malloc.cpp
-    src/free.cpp
-    src/calloc.cpp
-    src/realloc.cpp
-)
+# Automatically find all .cpp files in src/ (including subdirectories)
+file(GLOB_RECURSE LIB_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
+message(STATUS "Found library sources: ${LIB_SOURCES}")
+
+add_library(${PROJECT_NAME} STATIC ${LIB_SOURCES})
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC

@@ -1,5 +1,7 @@
-# Automatic reconfigure for new tests (CMake 3.12+)
-file(GLOB TEST_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/test_*.cpp")
+# CMakeLists.txt for tests/
+
+# Automatically find all .cpp files with the name test_ in tests/ (including subdirectories)
+file(GLOB_RECURSE TEST_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/test_*.cpp")
 message(STATUS "Found tests: ${TEST_SOURCES}")
 
 foreach(test_file ${TEST_SOURCES})
