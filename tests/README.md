@@ -87,3 +87,21 @@ All test files follow: `test_<description>.cpp`
 **Invalid operations and error handling**
 
 ⚠️ **No strace tests** - Invalid operations violate normal behavior
+
+## Memory Leak Detection with strace
+
+The project includes automatic memory leak detection using `strace`. If strace is installed, CTest will automatically run additional tests that verify:
+
+- **Program break restoration**: Checks if `brk()` start address == end address
+- **No memory leaks**: Ensures all allocated memory is properly freed
+- **System call tracing**: Monitors `brk()`, `mmap()`, and `munmap()` calls
+
+### How It Works
+
+1. CMake detects if `strace` is available
+2. For each test, creates a `test_name_strace` variant
+3. `tools/strace_test.sh` script:
+   - Runs test under strace
+   - Captures all `brk()` system calls
+   - Compares first and last program break addresses
+   - Reports memory leaks if addresses differ
