@@ -3,6 +3,12 @@
 namespace mem
 {
 
-void free(void* ptr) { (void)ptr; }
+void free(void* ptr)
+{
+    if (ptr == nullptr)
+    {
+        return;
+    }
+}
 
 } // namespace mem
