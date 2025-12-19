@@ -9,12 +9,15 @@ namespace mem
 
 void* malloc(size_t size)
 {
+    if (size == 0)
+    {
+        return nullptr;
+    }
+
     if (internal::heap_start == nullptr)
     {
         internal::heap_start = sbrk(0);
     }
-
-    internal::total_memory_allocated += size;
 
     internal::MemoryBlock* found_block =
         internal::findLargeEnoughFreeMemoryBlock(&internal::block_list_head, size);
@@ -60,6 +63,7 @@ void* malloc(size_t size)
         new_block->allocated_ = true;
         new_block->next_ = nullptr;
         internal::insertMemoryBlockAtEnd(&internal::block_list_head, new_block);
+        internal::total_memory_allocated += size;
     }
 
     return internal::getPayloadAddress(new_block);
@@ -73,7 +77,7 @@ void* increaseHeap(size_t size)
     void* result = sbrk(static_cast<intptr_t>(size));
     if (result == getErrorCodeInVoidPtr(-1) || result == getErrorCodeInVoidPtr(0))
     {
-        exit(-1);
+        return nullptr;
     }
 
     return result;
@@ -116,15 +120,17 @@ void* splitFreeMemoryBlockIfPossible(MemoryBlock* new_block, size_t size)
     }
     else
     {
+        new_block->size_ = new_block->size_;
         new_block->allocated_ = true;
     }
 
+    total_memory_allocated += new_block->size_;
     return getPayloadAddress(new_block);
 }
 
 void* getMemoryBlockSplitAddress(MemoryBlock* new_block, size_t size)
 {
-    return (reinterpret_cast<char*>(getPayloadAddress(new_block)) + size);
+    return (reinterpret_cast<char*>(new_block) + BLOCK_METADATA_SIZE + size);
 }
 
 void insertMemoryBlockAtEnd(MemoryBlock** block_list_head, MemoryBlock* new_block)
@@ -169,6 +175,17 @@ MemoryBlock* getMemoryBlockFromAddress(void* address)
 size_t getSizeOfAllocatedMemoryBlock(MemoryBlock* block)
 {
     return reinterpret_cast<size_t>(getPayloadAddress(block));
+}
+
+bool isPointerInHeap(void* ptr)
+{
+    void* current_program_break = sbrk(0);
+    if (ptr < heap_start || ptr >= current_program_break)
+    {
+        return false;
+    }
+
+    return true;
 }
 
 void* getErrorCodeInVoidPtr(size_t error_code) { return reinterpret_cast<void*>(error_code); }
