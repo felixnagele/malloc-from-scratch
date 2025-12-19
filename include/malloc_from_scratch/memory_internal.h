@@ -32,6 +32,11 @@ void* splitFreeMemoryBlockIfPossible(MemoryBlock* new_block, size_t size);
 void* getMemoryBlockSplitAddress(MemoryBlock* new_block, size_t size);
 void insertMemoryBlockAtEnd(MemoryBlock** block_list_head, MemoryBlock* new_block);
 
+// free
+void decreaseHeap(MemoryBlock* block_heap_end);
+void mergeFreeMemoryBlocks();
+void getLastMemoryBlock(MemoryBlock** block_list_tail, MemoryBlock** block_previous_from_last);
+
 // helpers
 void* getPayloadAddress(MemoryBlock* block);
 MemoryBlock* getMetadata(void* payload_address);
