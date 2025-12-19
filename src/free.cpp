@@ -14,9 +14,7 @@ void free(void* ptr)
         return;
     }
 
-    void* current_program_break = sbrk(0);
-
-    if (ptr < internal::heap_start || ptr >= current_program_break)
+    if (!internal::isPointerInHeap(ptr))
     {
         return;
     }
@@ -24,8 +22,14 @@ void free(void* ptr)
     internal::MemoryBlock* block_to_free = internal::getMetadata(ptr);
     if (block_to_free == nullptr || block_to_free->allocated_ == false)
     {
+        if (block_to_free)
+        {
+            exit(-1);
+        }
         return;
     }
+
+    internal::total_memory_allocated -= block_to_free->size_;
     block_to_free->allocated_ = false;
 
     internal::mergeFreeMemoryBlocks();
@@ -62,15 +66,22 @@ void decreaseHeap(MemoryBlock* block_heap_end)
         return;
     }
 
-    size_t release_size = block_heap_end->size_ + BLOCK_METADATA_SIZE;
-    void* program_break = sbrk(-static_cast<intptr_t>(release_size));
+    void* current_break = sbrk(0);
+    void* block_start = reinterpret_cast<void*>(block_heap_end);
+    intptr_t release_size =
+        reinterpret_cast<char*>(current_break) - reinterpret_cast<char*>(block_start);
+
+    if (release_size <= 0)
+    {
+        return;
+    }
+
+    void* program_break = sbrk(-release_size);
 
     if (program_break == getErrorCodeInVoidPtr(-1) || program_break == getErrorCodeInVoidPtr(0))
     {
         exit(-1);
     }
-
-    total_memory_allocated -= release_size;
 }
 
 void mergeFreeMemoryBlocks()

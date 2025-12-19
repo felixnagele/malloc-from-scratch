@@ -42,6 +42,7 @@ void* getPayloadAddress(MemoryBlock* block);
 MemoryBlock* getMetadata(void* payload_address);
 MemoryBlock* getMemoryBlockFromAddress(void* address);
 size_t getSizeOfAllocatedMemoryBlock(MemoryBlock* block);
+bool isPointerInHeap(void* ptr);
 void* getErrorCodeInVoidPtr(size_t error_code);
 
 // Test helper functions to inspect allocator state
