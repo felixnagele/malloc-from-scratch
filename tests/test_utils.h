@@ -1,6 +1,7 @@
 #ifndef TEST_UTILS_H
 #define TEST_UTILS_H
 
+#include "malloc_from_scratch/memory_internal.h"
 #include <cstring>
 #include <iostream>
 
@@ -55,5 +56,9 @@ inline void test_pass()
 #define ASSERT_NULL(ptr) assert_null((ptr), __FILE__, __LINE__)
 #define ASSERT_NOT_NULL(ptr) assert_not_null((ptr), __FILE__, __LINE__)
 #define TEST_PASS() test_pass()
+
+// Internal test helpers for convenience
+using mem::internal::getFreeBlockInfo;
+using mem::internal::getTotalUsedMemory;
 
 #endif // TEST_UTILS_H

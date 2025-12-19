@@ -29,6 +29,22 @@ foreach(test_file ${TEST_SOURCES})
             LABELS "${test_category}"
         )
     endif()
+
+    # Set default timeout for all tests (10 seconds)
+    set_tests_properties(${test_name} PROPERTIES
+        TIMEOUT 10
+    )
+
+    # Longer timeouts for specific categories that need more time
+    if(test_category MATCHES "stress")
+        set_tests_properties(${test_name} PROPERTIES
+            TIMEOUT 30
+        )
+    elseif(test_category MATCHES "concurrency")
+        set_tests_properties(${test_name} PROPERTIES
+            TIMEOUT 20
+        )
+    endif()
 endforeach()
 
 # Add strace tests for all categories except those that would produce false positives
