@@ -1,6 +1,7 @@
 #include "malloc_from_scratch/memory_allocator.h"
 #include "malloc_from_scratch/memory_internal.h"
 
+#include <cstdlib>
 #include <unistd.h>
 
 namespace mem
@@ -15,27 +16,116 @@ void* malloc(size_t size)
 
     internal::total_memory_allocated += size;
 
-    size_t total_size = sizeof(internal::MemoryBlock) + size;
+    internal::MemoryBlock* found_block =
+        internal::findLargeEnoughFreeMemoryBlock(&internal::block_list_head, size);
 
-    void* new_memory_allocation = internal::increaseHeap(total_size);
-    if (new_memory_allocation == NULL)
+    if (found_block != nullptr)
     {
-        return NULL;
+        void* return_address = internal::splitFreeMemoryBlockIfPossible(found_block, size);
+        return return_address;
     }
 
-    internal::MemoryBlock* new_block =
-        reinterpret_cast<internal::MemoryBlock*>(new_memory_allocation);
-    new_block->size_ = size;
-    new_block->allocated_ = 1;
-    new_block->next_ = nullptr;
+    bool is_frame_used = false;
+    size_t total_size = 0;
+    if (size < internal::CHUNK_SIZE)
+    {
+        total_size = internal::BLOCK_METADATA_SIZE + internal::CHUNK_SIZE;
+        is_frame_used = true;
+    }
+    else
+    {
+        total_size = internal::BLOCK_METADATA_SIZE + size;
+        is_frame_used = false;
+    }
 
-    internal::insertMemoryBlockAtEnd(&internal::block_list_head, new_block);
+    void* new_memory_allocation = internal::increaseHeap(total_size);
+    if (new_memory_allocation == nullptr)
+    {
+        return nullptr;
+    }
+
+    internal::MemoryBlock* new_block = internal::getMemoryBlockFromAddress(new_memory_allocation);
+    if (is_frame_used)
+    {
+        new_block->size_ = internal::CHUNK_SIZE;
+        new_block->allocated_ = false;
+        new_block->next_ = nullptr;
+        internal::insertMemoryBlockAtEnd(&internal::block_list_head, new_block);
+        void* return_address = internal::splitFreeMemoryBlockIfPossible(new_block, size);
+        return return_address;
+    }
+    else
+    {
+        new_block->size_ = size;
+        new_block->allocated_ = true;
+        new_block->next_ = nullptr;
+        internal::insertMemoryBlockAtEnd(&internal::block_list_head, new_block);
+    }
 
     return internal::getPayloadAddress(new_block);
 }
 
 namespace internal
 {
+
+void* increaseHeap(size_t size)
+{
+    void* result = sbrk(static_cast<intptr_t>(size));
+    if (result == getErrorCodeInVoidPtr(-1) || result == getErrorCodeInVoidPtr(0))
+    {
+        exit(-1);
+    }
+
+    return result;
+}
+
+MemoryBlock* findLargeEnoughFreeMemoryBlock(MemoryBlock** block_list_head, size_t size)
+{
+    MemoryBlock* current = *block_list_head;
+    while (current != nullptr)
+    {
+        if (current->allocated_ == false && current->size_ >= size)
+        {
+            return current;
+        }
+        current = current->next_;
+    }
+    return nullptr;
+}
+
+void* splitFreeMemoryBlockIfPossible(MemoryBlock* new_block, size_t size)
+{
+    if (new_block == nullptr)
+    {
+        return nullptr;
+    }
+
+    size_t remaining_size = new_block->size_ - size;
+    char one_byte_payload_size_requirement = 1;
+    if (remaining_size >= BLOCK_METADATA_SIZE + one_byte_payload_size_requirement)
+    {
+        void* split_address = getMemoryBlockSplitAddress(new_block, size);
+        MemoryBlock* new_temp_block = getMemoryBlockFromAddress(split_address);
+        new_temp_block->size_ = remaining_size - BLOCK_METADATA_SIZE;
+        new_temp_block->allocated_ = false;
+        new_temp_block->next_ = new_block->next_;
+
+        new_block->size_ = size;
+        new_block->allocated_ = true;
+        new_block->next_ = new_temp_block;
+    }
+    else
+    {
+        new_block->allocated_ = true;
+    }
+
+    return getPayloadAddress(new_block);
+}
+
+void* getMemoryBlockSplitAddress(MemoryBlock* new_block, size_t size)
+{
+    return (reinterpret_cast<char*>(getPayloadAddress(new_block)) + size);
+}
 
 void insertMemoryBlockAtEnd(MemoryBlock** block_list_head, MemoryBlock* new_block)
 {
@@ -54,6 +144,7 @@ void insertMemoryBlockAtEnd(MemoryBlock** block_list_head, MemoryBlock* new_bloc
     }
 }
 
+// helpers
 void* getPayloadAddress(MemoryBlock* block)
 {
     if (!block)
@@ -66,26 +157,21 @@ void* getPayloadAddress(MemoryBlock* block)
 
 MemoryBlock* getMetadata(void* payload_address)
 {
-    if (!payload_address)
-    {
-        return nullptr;
-    }
-
     return reinterpret_cast<MemoryBlock*>(reinterpret_cast<char*>(payload_address) -
                                           BLOCK_METADATA_SIZE);
 }
 
-void* increaseHeap(size_t size)
+MemoryBlock* getMemoryBlockFromAddress(void* address)
 {
-    void* result = sbrk(static_cast<intptr_t>(size));
-    if (result == reinterpret_cast<void*>(-1))
-    {
-        return nullptr;
-    }
-
-    return result;
+    return reinterpret_cast<MemoryBlock*>(address);
 }
 
-void* decreaseHeap(MemoryBlock* block_heap_end, size_t size) { return nullptr; }
+size_t getSizeOfAllocatedMemoryBlock(MemoryBlock* block)
+{
+    return reinterpret_cast<size_t>(getPayloadAddress(block));
+}
+
+void* getErrorCodeInVoidPtr(size_t error_code) { return reinterpret_cast<void*>(error_code); }
+
 } // namespace internal
 } // namespace mem
