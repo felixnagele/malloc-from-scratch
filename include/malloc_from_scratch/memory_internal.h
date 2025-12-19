@@ -44,6 +44,31 @@ MemoryBlock* getMemoryBlockFromAddress(void* address);
 size_t getSizeOfAllocatedMemoryBlock(MemoryBlock* block);
 void* getErrorCodeInVoidPtr(size_t error_code);
 
+// Test helper functions to inspect allocator state
+inline size_t getTotalUsedMemory() { return total_memory_allocated; }
+inline size_t getFreeBlockInfo(int type)
+{
+    // type 0 = address of first free block
+    // type 1 = size of first free block
+    MemoryBlock* current = block_list_head;
+    while (current != nullptr)
+    {
+        if (!current->allocated_)
+        {
+            if (type == 0)
+            {
+                return reinterpret_cast<size_t>(getPayloadAddress(current));
+            }
+            else if (type == 1)
+            {
+                return current->size_;
+            }
+        }
+        current = current->next_;
+    }
+    return 0;
+}
+
 } // namespace internal
 } // namespace mem
 
