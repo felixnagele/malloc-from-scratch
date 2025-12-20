@@ -144,18 +144,17 @@ void* getMemoryBlockSplitAddress(MemoryBlock* new_block, size_t size)
 
 void insertMemoryBlockAtEnd(MemoryBlock** block_list_head, MemoryBlock* new_block)
 {
+    new_block->next_ = nullptr;
+
     if (*block_list_head == nullptr)
     {
         *block_list_head = new_block;
+        block_list_tail = new_block;
     }
     else
     {
-        MemoryBlock* current = *block_list_head;
-        while (current->next_ != nullptr)
-        {
-            current = current->next_;
-        }
-        current->next_ = new_block;
+        block_list_tail->next_ = new_block;
+        block_list_tail = new_block;
     }
 }
 

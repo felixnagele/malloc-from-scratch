@@ -18,6 +18,7 @@ struct MemoryBlock
 };
 
 inline MemoryBlock* block_list_head = nullptr;
+inline MemoryBlock* block_list_tail = nullptr;
 inline void* heap_start = nullptr;
 inline size_t total_memory_allocated = 0;
 inline pthread_mutex_t allocator_mutex = PTHREAD_MUTEX_INITIALIZER;
