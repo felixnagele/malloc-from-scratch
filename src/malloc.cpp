@@ -37,7 +37,7 @@ void* malloc(size_t size)
     }
     else
     {
-        total_size = internal::BLOCK_METADATA_SIZE + size;
+        total_size = internal::BLOCK_METADATA_SIZE + size + internal::CANARY_SIZE;
         is_frame_used = false;
     }
 
@@ -50,6 +50,7 @@ void* malloc(size_t size)
     internal::MemoryBlock* new_block = internal::getMemoryBlockFromAddress(new_memory_allocation);
     if (is_frame_used)
     {
+        new_block->magic_ = internal::MAGIC_NUMBER;
         new_block->size_ = internal::CHUNK_SIZE;
         new_block->allocated_ = false;
         new_block->next_ = nullptr;
@@ -59,10 +60,12 @@ void* malloc(size_t size)
     }
     else
     {
+        new_block->magic_ = internal::MAGIC_NUMBER;
         new_block->size_ = size;
         new_block->allocated_ = true;
         new_block->next_ = nullptr;
         internal::insertMemoryBlockAtEnd(&internal::block_list_head, new_block);
+        internal::setCanary(new_block);
         internal::total_memory_allocated += size;
     }
 
@@ -86,14 +89,16 @@ void* increaseHeap(size_t size)
 MemoryBlock* findLargeEnoughFreeMemoryBlock(MemoryBlock** block_list_head, size_t size)
 {
     MemoryBlock* current = *block_list_head;
+    size_t size_needed = size + CANARY_SIZE;
     while (current != nullptr)
     {
-        if (current->allocated_ == false && current->size_ >= size)
+        if (current->allocated_ == false && current->size_ >= size_needed)
         {
             return current;
         }
         current = current->next_;
     }
+
     return nullptr;
 }
 
@@ -104,12 +109,14 @@ void* splitFreeMemoryBlockIfPossible(MemoryBlock* new_block, size_t size)
         return nullptr;
     }
 
-    size_t remaining_size = new_block->size_ - size;
+    size_t size_with_canary = size + CANARY_SIZE;
+    size_t remaining_size = new_block->size_ - size_with_canary;
     char one_byte_payload_size_requirement = 1;
     if (remaining_size >= BLOCK_METADATA_SIZE + one_byte_payload_size_requirement)
     {
         void* split_address = getMemoryBlockSplitAddress(new_block, size);
         MemoryBlock* new_temp_block = getMemoryBlockFromAddress(split_address);
+        new_temp_block->magic_ = MAGIC_NUMBER;
         new_temp_block->size_ = remaining_size - BLOCK_METADATA_SIZE;
         new_temp_block->allocated_ = false;
         new_temp_block->next_ = new_block->next_;
@@ -120,17 +127,19 @@ void* splitFreeMemoryBlockIfPossible(MemoryBlock* new_block, size_t size)
     }
     else
     {
-        new_block->size_ = new_block->size_;
+        new_block->size_ = new_block->size_ - CANARY_SIZE;
         new_block->allocated_ = true;
     }
 
+    setCanary(new_block);
     total_memory_allocated += new_block->size_;
+
     return getPayloadAddress(new_block);
 }
 
 void* getMemoryBlockSplitAddress(MemoryBlock* new_block, size_t size)
 {
-    return (reinterpret_cast<char*>(new_block) + BLOCK_METADATA_SIZE + size);
+    return (reinterpret_cast<char*>(new_block) + BLOCK_METADATA_SIZE + size + CANARY_SIZE);
 }
 
 void insertMemoryBlockAtEnd(MemoryBlock** block_list_head, MemoryBlock* new_block)
@@ -148,6 +157,18 @@ void insertMemoryBlockAtEnd(MemoryBlock** block_list_head, MemoryBlock* new_bloc
         }
         current->next_ = new_block;
     }
+}
+
+void setCanary(MemoryBlock* block)
+{
+    if (!block || block->allocated_ == false)
+    {
+        return;
+    }
+
+    size_t* canary = reinterpret_cast<size_t*>(reinterpret_cast<char*>(block) +
+                                               BLOCK_METADATA_SIZE + block->size_);
+    *canary = CANARY_VALUE;
 }
 
 // helpers
@@ -180,15 +201,28 @@ size_t getSizeOfAllocatedMemoryBlock(MemoryBlock* block)
 bool isPointerInHeap(void* ptr)
 {
     void* current_program_break = sbrk(0);
-    if (ptr < heap_start || ptr >= current_program_break)
+    return (ptr >= heap_start && ptr < current_program_break);
+}
+
+void* getErrorCodeInVoidPtr(size_t error_code) { return reinterpret_cast<void*>(error_code); }
+
+bool isValidBlock(MemoryBlock* block)
+{
+    return block != nullptr && block->magic_ == MAGIC_NUMBER && block->allocated_ == true;
+}
+
+bool checkCanary(MemoryBlock* block)
+{
+    if (!block)
     {
         return false;
     }
 
-    return true;
-}
+    size_t* canary = reinterpret_cast<size_t*>(reinterpret_cast<char*>(block) +
+                                               BLOCK_METADATA_SIZE + block->size_);
 
-void* getErrorCodeInVoidPtr(size_t error_code) { return reinterpret_cast<void*>(error_code); }
+    return (*canary == CANARY_VALUE);
+}
 
 } // namespace internal
 } // namespace mem
