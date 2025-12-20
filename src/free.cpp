@@ -48,10 +48,12 @@ void free(void* ptr)
         if (block_previous_from_last != nullptr)
         {
             block_previous_from_last->next_ = nullptr;
+            internal::block_list_tail = block_previous_from_last;
         }
         else
         {
             internal::block_list_head = nullptr;
+            internal::block_list_tail = nullptr;
         }
         internal::decreaseHeap(block_list_tail);
     }
