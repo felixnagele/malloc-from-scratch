@@ -11,6 +11,7 @@ namespace internal
 
 struct MemoryBlock
 {
+    size_t magic_;
     size_t size_;
     bool allocated_;
     MemoryBlock* next_;
@@ -22,8 +23,10 @@ inline size_t total_memory_allocated = 0;
 inline pthread_mutex_t allocator_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 constexpr size_t BLOCK_METADATA_SIZE = sizeof(MemoryBlock);
-constexpr size_t BLOCK_SIZE = 16;
 constexpr size_t CHUNK_SIZE = 65536;
+constexpr size_t MAGIC_NUMBER = 0xDEADBEEF;
+constexpr size_t CANARY_VALUE = 0xC0FFEE00;
+constexpr size_t CANARY_SIZE = sizeof(size_t);
 
 // malloc
 void* increaseHeap(size_t size);
@@ -31,11 +34,13 @@ MemoryBlock* findLargeEnoughFreeMemoryBlock(MemoryBlock** block_list_head, size_
 void* splitFreeMemoryBlockIfPossible(MemoryBlock* new_block, size_t size);
 void* getMemoryBlockSplitAddress(MemoryBlock* new_block, size_t size);
 void insertMemoryBlockAtEnd(MemoryBlock** block_list_head, MemoryBlock* new_block);
+void setCanary(MemoryBlock* block);
 
 // free
 void decreaseHeap(MemoryBlock* block_heap_end);
 void mergeFreeMemoryBlocks();
 void getLastMemoryBlock(MemoryBlock** block_list_tail, MemoryBlock** block_previous_from_last);
+bool isBlockCorrupted(MemoryBlock* block);
 
 // helpers
 void* getPayloadAddress(MemoryBlock* block);
@@ -44,6 +49,8 @@ MemoryBlock* getMemoryBlockFromAddress(void* address);
 size_t getSizeOfAllocatedMemoryBlock(MemoryBlock* block);
 bool isPointerInHeap(void* ptr);
 void* getErrorCodeInVoidPtr(size_t error_code);
+bool isValidBlock(MemoryBlock* block);
+bool checkCanary(MemoryBlock* block);
 
 // Test helper functions to inspect allocator state
 inline size_t getTotalUsedMemory() { return total_memory_allocated; }

@@ -20,13 +20,18 @@ void free(void* ptr)
     }
 
     internal::MemoryBlock* block_to_free = internal::getMetadata(ptr);
-    if (block_to_free == nullptr || block_to_free->allocated_ == false)
+    if (!internal::isValidBlock(block_to_free))
     {
-        if (block_to_free)
+        if (internal::isBlockCorrupted(block_to_free))
         {
             exit(-1);
         }
         return;
+    }
+
+    if (!internal::checkCanary(block_to_free))
+    {
+        exit(-1);
     }
 
     internal::total_memory_allocated -= block_to_free->size_;
@@ -91,7 +96,7 @@ void mergeFreeMemoryBlocks()
     {
         if (current->allocated_ == false && current->next_->allocated_ == false)
         {
-            current->size_ += BLOCK_METADATA_SIZE + current->next_->size_;
+            current->size_ += BLOCK_METADATA_SIZE + CANARY_SIZE + current->next_->size_;
             current->next_ = current->next_->next_;
         }
         else
@@ -115,6 +120,8 @@ void getLastMemoryBlock(MemoryBlock** block_list_tail, MemoryBlock** block_previ
     *block_list_tail = current;
     *block_previous_from_last = previous;
 }
+
+bool isBlockCorrupted(MemoryBlock* block) { return (block && block->magic_ != MAGIC_NUMBER); }
 
 } // namespace internal
 } // namespace mem
