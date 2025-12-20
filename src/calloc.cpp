@@ -1,4 +1,5 @@
 #include "malloc_from_scratch/memory_allocator.h"
+
 #include <cstring>
 
 namespace mem
@@ -6,9 +7,14 @@ namespace mem
 
 void* calloc(size_t num, size_t size)
 {
+    if (num == 0 || size == 0)
+    {
+        return nullptr;
+    }
+
     size_t total_size = num * size;
     size_t overflow_check = total_size / num;
-    if (overflow_check != size && num > 0 && size > 0)
+    if (overflow_check != size)
     {
         return nullptr;
     }
