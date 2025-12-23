@@ -1,5 +1,8 @@
 {
   "recommendations": [
+    "editorconfig.editorconfig",
+    "prettier.prettier-vscode",
+    "davidanson.vscode-markdownlint",
     "xaver.clang-format",
     "ms-vscode.cpptools",
     "ms-vscode.cmake-tools"

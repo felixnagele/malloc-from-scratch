@@ -50,6 +50,36 @@ cmake --build build
 git clone https://github.com/felixnagele/malloc-from-scratch.git && cd malloc-from-scratch && sudo apt update && sudo apt install -y build-essential cmake clang-format clang-tidy strace && cmake -S . -B build && cmake --build build
 ```
 
+### Optional: VS Code setup (clang-format)
+
+#### Step 1: Install the clang-format extension
+
+Install the [Clang-Format extension](https://marketplace.visualstudio.com/items?itemName=xaver.clang-format) from the VS Code marketplace.
+
+#### Step 2: Configure VS Code settings
+
+VS Code usually detects `clang-format` automatically if it is installed on your system. If VS Code cannot find the formatter or formatting does not work, you can manually specify the path to the `clang-format` executable.
+
+Open your VS Code user settings (`settings.json`):
+
+`Ctrl + Shift + P -> "Preferences: Open Settings (JSON)"`
+
+Add the following entry, replacing the path with the correct one for your system:
+
+```json
+{
+  "clang-format.executable": "/path/to/clang-format"
+}
+```
+
+Example for Ubuntu/Debian:
+
+```json
+{
+  "clang-format.executable": "/usr/bin/clang-format"
+}
+```
+
 ## 📖 Usage - Linux (Ubuntu/Debian)
 
 ### Verify installation
@@ -92,9 +122,11 @@ Run tests locally:
 cmake --build build && ctest --test-dir build
 ```
 
+If you use VS Code, you can also run the tests locally via the task defined in `.vscode/tasks.json`. Use `Ctrl + Shift + B` to run the build and tests task.
+
 For detailed test usage with instructions, see [tests/README.md](./tests/README.md).
 
-Tests also run automatically in CI/pipeline [here](https://github.com/felixnagele/malloc-from-scratch/actions).
+Tests also run automatically in CI/pipeline [Actions](https://github.com/felixnagele/malloc-from-scratch/actions).
 
 ## Contributing, License & Support
 

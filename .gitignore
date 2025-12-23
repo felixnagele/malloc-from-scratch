@@ -47,6 +47,7 @@ cmake-build-*/
 # VS Code
 .vscode/.cmaketools.json
 .vscode/c_cpp_properties.json
+.vscode/launch.json
 
 # CMake
 CMakeCache.txt
