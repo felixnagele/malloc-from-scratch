@@ -1,23 +1,32 @@
 {
-  "editor.insertSpaces": true,
-  "editor.tabSize": 4,
-  "editor.formatOnSave": true,
-  "editor.formatOnPaste": false,
   "files.trimTrailingWhitespace": true,
   "files.insertFinalNewline": true,
+
+  "[markdown]": {
+    "files.trimTrailingWhitespace": false
+  },
+
+  "editor.formatOnSave": true,
+  "editor.formatOnPaste": false,
+
+  "editor.defaultFormatter": "prettier.prettier-vscode",
+
   "[cpp]": {
-    "editor.defaultFormatter": "xaver.clang-format",
-    "editor.formatOnSave": true
+    "editor.defaultFormatter": "xaver.clang-format"
   },
   "[c]": {
-    "editor.defaultFormatter": "xaver.clang-format",
-    "editor.formatOnSave": true
+    "editor.defaultFormatter": "xaver.clang-format"
   },
   "files.associations": {
+    "*.cxx": "cpp",
+    "*.cc": "cpp",
     "*.h": "cpp",
-    "*.hpp": "cpp"
+    "*.hpp": "cpp",
+    "*.hxx": "cpp",
+    "*.hh": "cpp",
+    "*.tpp": "cpp",
+    "*.ipp": "cpp"
   },
-  "clang-format.executable": "/usr/bin/clang-format",
-  "cmake.configureOnOpen": true,
+
   "cmake.buildDirectory": "${workspaceFolder}/build"
 }
