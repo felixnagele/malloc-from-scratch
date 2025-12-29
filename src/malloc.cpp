@@ -192,11 +192,6 @@ MemoryBlock* getMemoryBlockFromAddress(void* address)
     return reinterpret_cast<MemoryBlock*>(address);
 }
 
-size_t getSizeOfAllocatedMemoryBlock(MemoryBlock* block)
-{
-    return reinterpret_cast<size_t>(getPayloadAddress(block));
-}
-
 bool isPointerInHeap(void* ptr)
 {
     void* current_program_break = sbrk(0);

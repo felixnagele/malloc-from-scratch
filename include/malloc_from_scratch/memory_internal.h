@@ -17,11 +17,11 @@ struct MemoryBlock
     MemoryBlock* next_;
 };
 
-inline MemoryBlock* block_list_head = nullptr;
-inline MemoryBlock* block_list_tail = nullptr;
-inline void* heap_start = nullptr;
-inline size_t total_memory_allocated = 0;
-inline pthread_mutex_t allocator_mutex = PTHREAD_MUTEX_INITIALIZER;
+extern MemoryBlock* block_list_head;
+extern MemoryBlock* block_list_tail;
+extern void* heap_start;
+extern size_t total_memory_allocated;
+extern pthread_mutex_t allocator_mutex;
 
 constexpr size_t BLOCK_METADATA_SIZE = sizeof(MemoryBlock);
 constexpr size_t CHUNK_SIZE = 65536;
@@ -47,36 +47,14 @@ bool isBlockCorrupted(MemoryBlock* block);
 void* getPayloadAddress(MemoryBlock* block);
 MemoryBlock* getMetadata(void* payload_address);
 MemoryBlock* getMemoryBlockFromAddress(void* address);
-size_t getSizeOfAllocatedMemoryBlock(MemoryBlock* block);
 bool isPointerInHeap(void* ptr);
 void* getErrorCodeInVoidPtr(size_t error_code);
 bool isValidBlock(MemoryBlock* block);
 bool checkCanary(MemoryBlock* block);
 
 // Test helper functions to inspect allocator state
-inline size_t getTotalUsedMemory() { return total_memory_allocated; }
-inline size_t getFreeBlockInfo(int type)
-{
-    // type 0 = address of first free block
-    // type 1 = size of first free block
-    MemoryBlock* current = block_list_head;
-    while (current != nullptr)
-    {
-        if (!current->allocated_)
-        {
-            if (type == 0)
-            {
-                return reinterpret_cast<size_t>(getPayloadAddress(current));
-            }
-            else if (type == 1)
-            {
-                return current->size_;
-            }
-        }
-        current = current->next_;
-    }
-    return 0;
-}
+size_t getTotalUsedMemory();
+size_t getFreeBlockInfo(int type);
 
 } // namespace internal
 } // namespace mem
