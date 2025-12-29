@@ -4,15 +4,13 @@
 
 int main()
 {
-    std::cout << "TOTAL MEMORY START: " << getTotalUsedMemory() << std::endl;
     ASSERT_TRUE(getTotalUsedMemory() == 0);
 
-    size_t huge_size = static_cast<size_t>(1) << 40; // 1 TB
+    size_t huge_size = static_cast<size_t>(1) << 40;
     void* huge_ptr = mem::malloc(huge_size);
 
     ASSERT_NULL(huge_ptr);
 
-    std::cout << "TOTAL MEMORY MID: " << getTotalUsedMemory() << std::endl;
     ASSERT_TRUE(getTotalUsedMemory() == 0);
 
     size_t extreme_size = SIZE_MAX / 2;
@@ -27,7 +25,6 @@ int main()
         ASSERT_NULL(extreme_ptr);
     }
 
-    std::cout << "TOTAL MEMORY END: " << getTotalUsedMemory() << std::endl;
     ASSERT_TRUE(getTotalUsedMemory() == 0);
 
     TEST_PASS();

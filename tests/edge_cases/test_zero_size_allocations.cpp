@@ -15,7 +15,6 @@ int main()
     void* ptr4 = mem::calloc(0, 0);
     ASSERT_NULL(ptr4);
 
-    std::cout << "TOTAL MEMORY END: " << getTotalUsedMemory() << std::endl;
     ASSERT_TRUE(getTotalUsedMemory() == 0);
 
     TEST_PASS();

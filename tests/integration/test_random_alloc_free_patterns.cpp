@@ -44,7 +44,7 @@ int main()
                     data[idx][j] = idx;
                 }
 
-                allocated_count++;
+                allocated_count = allocated_count + 1;
             }
             else if (allocated_count > freed_count)
             {
@@ -62,7 +62,7 @@ int main()
 
                 mem::free(data[idx]);
                 data[idx] = nullptr;
-                freed_count++;
+                freed_count = freed_count + 1;
             }
         }
 
@@ -75,7 +75,6 @@ int main()
             }
         }
 
-        std::cout << "TOTAL MEMORY END: " << getTotalUsedMemory() << std::endl;
         ASSERT_TRUE(getTotalUsedMemory() == 0);
     }
 

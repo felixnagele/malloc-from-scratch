@@ -13,12 +13,10 @@ int main()
 
     char* data[5];
 
-    std::cout << "TOTAL MEMORY START: " << getTotalUsedMemory() << std::endl;
     ASSERT_TRUE(getTotalUsedMemory() == 0);
 
     data[0] = static_cast<char*>(mem::malloc(array_size_0 * sizeof(char)));
     ASSERT_NOT_NULL(data[0]);
-    std::cout << "TOTAL MEMORY MID 1: " << getTotalUsedMemory() << std::endl;
     ASSERT_TRUE(getTotalUsedMemory() == array_size_0 * sizeof(char));
 
     data[1] = static_cast<char*>(mem::malloc(array_size_1 * sizeof(char)));
@@ -40,7 +38,6 @@ int main()
 
     size_t total_size =
         (array_size_0 + array_size_1 + array_size_2 + array_size_3 + array_size_4) * sizeof(char);
-    std::cout << "TOTAL MEMORY MID 2: " << getTotalUsedMemory() << std::endl;
     ASSERT_TRUE(getTotalUsedMemory() == total_size);
 
     mem::free(data[0]);
@@ -61,7 +58,6 @@ int main()
     mem::free(data[2]);
     mem::free(data[4]);
 
-    std::cout << "TOTAL MEMORY END: " << getTotalUsedMemory() << std::endl;
     ASSERT_TRUE(getTotalUsedMemory() == 0);
 
     TEST_PASS();
