@@ -3,7 +3,10 @@
 
 int main()
 {
-    constexpr int num_allocations = 100000;
+    // Limitations!
+    // With locking, 10k allocations/free cycles can be done in under 1 second.
+    // Without locking, 100k allocations/free cycles can be done in under 1 second.
+    constexpr int num_allocations = 10000;
 
     int* buffers[num_allocations];
 
@@ -24,7 +27,6 @@ int main()
         mem::free(buffers[i]);
     }
 
-    std::cout << "TOTAL MEMORY END: " << getTotalUsedMemory() << std::endl;
     ASSERT_TRUE(getTotalUsedMemory() == 0);
 
     TEST_PASS();

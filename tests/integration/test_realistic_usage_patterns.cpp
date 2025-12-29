@@ -47,7 +47,6 @@ int main()
         mem::free(large_block2);
     }
 
-    std::cout << "TOTAL MEMORY END: " << getTotalUsedMemory() << std::endl;
     ASSERT_TRUE(getTotalUsedMemory() == 0);
 
     TEST_PASS();

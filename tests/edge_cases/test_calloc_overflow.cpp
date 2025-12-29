@@ -5,7 +5,6 @@
 
 int main()
 {
-    std::cout << "TOTAL MEMORY START: " << getTotalUsedMemory() << std::endl;
     ASSERT_TRUE(getTotalUsedMemory() == 0);
 
     size_t huge = std::numeric_limits<size_t>::max() / 2 + 1;
@@ -26,7 +25,6 @@ int main()
 
     mem::free(ptr3);
 
-    std::cout << "TOTAL MEMORY END: " << getTotalUsedMemory() << std::endl;
     ASSERT_TRUE(getTotalUsedMemory() == 0);
 
     TEST_PASS();

@@ -4,10 +4,9 @@
 
 int main()
 {
-    constexpr size_t large_size_1 = 100 * 1024; // 100 KB
-    constexpr size_t large_size_2 = 150 * 1024; // 150 KB
+    constexpr size_t large_size_1 = 100 * 1024;
+    constexpr size_t large_size_2 = 150 * 1024;
 
-    std::cout << "TOTAL MEMORY START: " << getTotalUsedMemory() << std::endl;
     ASSERT_TRUE(getTotalUsedMemory() == 0);
 
     char* block_a = static_cast<char*>(mem::malloc(large_size_1));
@@ -27,7 +26,6 @@ int main()
     }
 
     size_t memory_used = getTotalUsedMemory();
-    std::cout << "TOTAL MEMORY MID 1: " << memory_used << std::endl;
     ASSERT_TRUE(memory_used >= large_size_1 + large_size_2);
 
     for (size_t i = 0; i < large_size_1; i++)
@@ -43,7 +41,6 @@ int main()
     mem::free(block_a);
     mem::free(block_b);
 
-    std::cout << "TOTAL MEMORY MID 2: " << getTotalUsedMemory() << std::endl;
     ASSERT_TRUE(getTotalUsedMemory() == 0);
 
     char* block_x = static_cast<char*>(mem::malloc(1024));
@@ -66,7 +63,6 @@ int main()
     mem::free(block_x);
     mem::free(block_y);
 
-    std::cout << "TOTAL MEMORY END: " << getTotalUsedMemory() << std::endl;
     ASSERT_TRUE(getTotalUsedMemory() == 0);
 
     TEST_PASS();
