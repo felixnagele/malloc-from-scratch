@@ -8,8 +8,15 @@ A custom memory allocator implementation in C++. This project implements malloc,
 
 - Implements `malloc`, `free`, `calloc`, and `realloc` from scratch
 - Uses native C++ only (no external dependencies)
-- Custom memory management strategies
-- Test suite with different test types and memory leak detection
+- Thread-safe via a global pthread mutex
+- Custom heap using sbrk()
+- Memory safety: canary values, double-free detection, buffer overflow protection
+
+## ⚠️ Known Limitations
+
+- **Slow allocation in some cases:** To find a free block the allocator has to go through the linked list - `O(n)` time, so allocations get slower when the heap is fragmented.
+- **Global mutex locking:** One `mutex` for all operations makes the allocator safe but forces threads to run one at a time which reduces performance under heavy concurrency or function call loads.
+- **Thread count tested up to 100 threads:** sbrk() is not thread‑safe and conflicts with glibc’s malloc. Even with a global lock, other threads or libraries may change the program break. It often works with few threads, but beyond ~100 (tested) the risk of heap corruption and crashes rises sharply.
 
 ## 🛠 Requirements
 

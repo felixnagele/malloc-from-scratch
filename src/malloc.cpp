@@ -9,71 +9,78 @@ namespace mem
 
 void* malloc(size_t size)
 {
+    pthread_mutex_lock(&internal::allocator_mutex);
+    void* ptr = internal::malloc_no_lock(size);
+    pthread_mutex_unlock(&internal::allocator_mutex);
+    return ptr;
+}
+
+namespace internal
+{
+
+void* malloc_no_lock(size_t size)
+{
     if (size == 0)
     {
         return nullptr;
     }
 
-    if (internal::heap_start == nullptr)
+    if (heap_start == nullptr)
     {
-        internal::heap_start = sbrk(0);
+        heap_start = sbrk(0);
     }
 
-    internal::MemoryBlock* found_block =
-        internal::findLargeEnoughFreeMemoryBlock(&internal::block_list_head, size);
+    MemoryBlock* found_block = findLargeEnoughFreeMemoryBlock(&block_list_head, size);
 
     if (found_block != nullptr)
     {
-        void* return_address = internal::splitFreeMemoryBlockIfPossible(found_block, size);
+        void* return_address = splitFreeMemoryBlockIfPossible(found_block, size);
         return return_address;
     }
 
     bool is_frame_used = false;
     size_t total_size = 0;
-    if (size < internal::CHUNK_SIZE)
+    if (size < CHUNK_SIZE)
     {
-        total_size = internal::BLOCK_METADATA_SIZE + internal::CHUNK_SIZE;
+        total_size = BLOCK_METADATA_SIZE + CHUNK_SIZE;
         is_frame_used = true;
     }
     else
     {
-        total_size = internal::BLOCK_METADATA_SIZE + size + internal::CANARY_SIZE;
+        total_size = BLOCK_METADATA_SIZE + size + CANARY_SIZE;
         is_frame_used = false;
     }
 
-    void* new_memory_allocation = internal::increaseHeap(total_size);
+    void* new_memory_allocation = increaseHeap(total_size);
     if (new_memory_allocation == nullptr)
     {
         return nullptr;
     }
 
-    internal::MemoryBlock* new_block = internal::getMemoryBlockFromAddress(new_memory_allocation);
+    MemoryBlock* new_block = getMemoryBlockFromAddress(new_memory_allocation);
     if (is_frame_used)
     {
-        new_block->magic_ = internal::MAGIC_NUMBER;
-        new_block->size_ = internal::CHUNK_SIZE;
+        new_block->magic_ = MAGIC_NUMBER;
+        new_block->size_ = CHUNK_SIZE;
         new_block->allocated_ = false;
         new_block->next_ = nullptr;
-        internal::insertMemoryBlockAtEnd(&internal::block_list_head, new_block);
-        void* return_address = internal::splitFreeMemoryBlockIfPossible(new_block, size);
+        insertMemoryBlockAtEnd(&block_list_head, new_block);
+        void* return_address = splitFreeMemoryBlockIfPossible(new_block, size);
         return return_address;
     }
     else
     {
-        new_block->magic_ = internal::MAGIC_NUMBER;
+        new_block->magic_ = MAGIC_NUMBER;
         new_block->size_ = size;
         new_block->allocated_ = true;
         new_block->next_ = nullptr;
-        internal::insertMemoryBlockAtEnd(&internal::block_list_head, new_block);
-        internal::setCanary(new_block);
-        internal::total_memory_allocated += size;
+        insertMemoryBlockAtEnd(&block_list_head, new_block);
+        setCanary(new_block);
+        total_memory_allocated += size;
     }
 
-    return internal::getPayloadAddress(new_block);
+    return getPayloadAddress(new_block);
 }
-
-namespace internal
-{
 
 void* increaseHeap(size_t size)
 {
@@ -82,6 +89,8 @@ void* increaseHeap(size_t size)
     {
         return nullptr;
     }
+
+    highest_break = reinterpret_cast<char*>(result) + size;
 
     return result;
 }
@@ -124,6 +133,11 @@ void* splitFreeMemoryBlockIfPossible(MemoryBlock* new_block, size_t size)
         new_block->size_ = size;
         new_block->allocated_ = true;
         new_block->next_ = new_temp_block;
+
+        if (block_list_tail == new_block)
+        {
+            block_list_tail = new_temp_block;
+        }
     }
     else
     {
@@ -192,11 +206,7 @@ MemoryBlock* getMemoryBlockFromAddress(void* address)
     return reinterpret_cast<MemoryBlock*>(address);
 }
 
-bool isPointerInHeap(void* ptr)
-{
-    void* current_program_break = sbrk(0);
-    return (ptr >= heap_start && ptr < current_program_break);
-}
+bool isPointerInHeap(void* ptr) { return (ptr >= heap_start && ptr < highest_break); }
 
 void* getErrorCodeInVoidPtr(size_t error_code) { return reinterpret_cast<void*>(error_code); }
 
