@@ -20,25 +20,41 @@ void* realloc(void* ptr, size_t new_size)
         return nullptr;
     }
 
-    if (!internal::isPointerInHeap(ptr))
+    pthread_mutex_lock(&internal::allocator_mutex);
+    void* result = internal::realloc_no_lock(ptr, new_size);
+    pthread_mutex_unlock(&internal::allocator_mutex);
+    return result;
+}
+
+namespace internal
+{
+
+void* realloc_no_lock(void* ptr, size_t new_size)
+{
+    if (!isPointerInHeap(ptr))
     {
         return nullptr;
     }
 
-    internal::MemoryBlock* old_block = internal::getMetadata(ptr);
-    if (!internal::isValidBlock(old_block))
+    MemoryBlock* old_block = getMetadata(ptr);
+    if (!isValidBlock(old_block))
     {
         return nullptr;
     }
 
-    if (!internal::checkCanary(old_block))
+    if (!checkCanary(old_block))
     {
         exit(-1);
     }
 
     size_t old_size = old_block->size_;
 
-    void* new_ptr = malloc(new_size);
+    if (new_size <= old_size)
+    {
+        return ptr;
+    }
+
+    void* new_ptr = malloc_no_lock(new_size);
     if (new_ptr == nullptr)
     {
         return nullptr;
@@ -55,9 +71,10 @@ void* realloc(void* ptr, size_t new_size)
     }
     memcpy(new_ptr, ptr, copy_size);
 
-    free(ptr);
+    free_no_lock(ptr);
 
     return new_ptr;
 }
 
+} // namespace internal
 } // namespace mem

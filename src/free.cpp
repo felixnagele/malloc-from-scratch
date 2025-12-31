@@ -9,78 +9,94 @@ namespace mem
 
 void free(void* ptr)
 {
+    pthread_mutex_lock(&internal::allocator_mutex);
+    internal::free_no_lock(ptr);
+    pthread_mutex_unlock(&internal::allocator_mutex);
+}
+
+namespace internal
+{
+
+void free_no_lock(void* ptr)
+{
     if (ptr == nullptr)
     {
         return;
     }
 
-    if (!internal::isPointerInHeap(ptr))
+    if (!isPointerInHeap(ptr))
     {
         return;
     }
 
-    internal::MemoryBlock* block_to_free = internal::getMetadata(ptr);
-    if (!internal::isValidBlock(block_to_free))
+    MemoryBlock* block_to_free = getMetadata(ptr);
+    if (!isValidBlock(block_to_free))
     {
-        if (internal::isBlockCorrupted(block_to_free))
+        if (isBlockCorrupted(block_to_free))
         {
             exit(-1);
         }
         return;
     }
 
-    if (!internal::checkCanary(block_to_free))
+    if (!checkCanary(block_to_free))
     {
         exit(-1);
     }
 
-    internal::total_memory_allocated -= block_to_free->size_;
+    total_memory_allocated -= block_to_free->size_;
     block_to_free->allocated_ = false;
 
-    internal::mergeFreeMemoryBlocks();
+    mergeFreeMemoryBlocks();
 
-    internal::MemoryBlock* block_list_tail = nullptr;
-    internal::MemoryBlock* block_previous_from_last = nullptr;
+    MemoryBlock* last_block = nullptr;
+    MemoryBlock* second_to_last_block = nullptr;
 
-    internal::getLastMemoryBlock(&block_list_tail, &block_previous_from_last);
-    if (block_list_tail != nullptr && block_list_tail->allocated_ == false)
+    getLastMemoryBlock(&last_block, &second_to_last_block);
+    if (last_block != nullptr && last_block->allocated_ == false)
     {
-        if (block_previous_from_last != nullptr)
+        bool success = decreaseHeap(last_block);
+        if (success)
         {
-            block_previous_from_last->next_ = nullptr;
-            internal::block_list_tail = block_previous_from_last;
+            if (second_to_last_block != nullptr)
+            {
+                second_to_last_block->next_ = nullptr;
+                block_list_tail = second_to_last_block;
+            }
+            else
+            {
+                block_list_head = nullptr;
+                block_list_tail = nullptr;
+            }
         }
-        else
-        {
-            internal::block_list_head = nullptr;
-            internal::block_list_tail = nullptr;
-        }
-        internal::decreaseHeap(block_list_tail);
     }
 }
 
-namespace internal
-{
-
-void decreaseHeap(MemoryBlock* block_heap_end)
+bool decreaseHeap(MemoryBlock* block_heap_end)
 {
     if (block_heap_end == nullptr)
     {
-        return;
+        return false;
     }
     if (block_heap_end->next_ != nullptr)
     {
-        return;
+        return false;
     }
 
     void* current_break = sbrk(0);
     void* block_start = reinterpret_cast<void*>(block_heap_end);
+
+    if (current_break != highest_break)
+    {
+        return false;
+    }
+
     intptr_t release_size =
         reinterpret_cast<char*>(current_break) - reinterpret_cast<char*>(block_start);
 
     if (release_size <= 0)
     {
-        return;
+        return false;
     }
 
     void* program_break = sbrk(-release_size);
@@ -89,11 +105,17 @@ void decreaseHeap(MemoryBlock* block_heap_end)
     {
         exit(-1);
     }
+
+    highest_break = reinterpret_cast<char*>(current_break) - release_size;
+
+    return true;
 }
 
 void mergeFreeMemoryBlocks()
 {
     MemoryBlock* current = block_list_head;
+    MemoryBlock* last = nullptr;
+
     while (current != nullptr && current->next_ != nullptr)
     {
         if (current->allocated_ == false && current->next_->allocated_ == false)
@@ -103,8 +125,22 @@ void mergeFreeMemoryBlocks()
         }
         else
         {
+            last = current;
             current = current->next_;
         }
+    }
+
+    if (current != nullptr)
+    {
+        block_list_tail = current;
+    }
+    else if (last != nullptr)
+    {
+        block_list_tail = last;
+    }
+    else
+    {
+        block_list_tail = block_list_head;
     }
 }
 

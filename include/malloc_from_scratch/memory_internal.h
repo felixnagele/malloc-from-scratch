@@ -20,8 +20,14 @@ struct MemoryBlock
 extern MemoryBlock* block_list_head;
 extern MemoryBlock* block_list_tail;
 extern void* heap_start;
+extern void* highest_break;
 extern size_t total_memory_allocated;
 extern pthread_mutex_t allocator_mutex;
+
+void* malloc_no_lock(size_t size);
+void free_no_lock(void* ptr);
+void* calloc_no_lock(size_t num, size_t size);
+void* realloc_no_lock(void* ptr, size_t new_size);
 
 constexpr size_t BLOCK_METADATA_SIZE = sizeof(MemoryBlock);
 constexpr size_t CHUNK_SIZE = 65536;
@@ -38,7 +44,7 @@ void insertMemoryBlockAtEnd(MemoryBlock** block_list_head, MemoryBlock* new_bloc
 void setCanary(MemoryBlock* block);
 
 // free
-void decreaseHeap(MemoryBlock* block_heap_end);
+bool decreaseHeap(MemoryBlock* block_heap_end);
 void mergeFreeMemoryBlocks();
 void getLastMemoryBlock(MemoryBlock** block_list_tail, MemoryBlock** block_previous_from_last);
 bool isBlockCorrupted(MemoryBlock* block);
