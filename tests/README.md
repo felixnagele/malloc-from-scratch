@@ -12,6 +12,14 @@ Use the following commands in the root directory to run tests with CTest.
 cmake --build build && ctest --test-dir build
 ```
 
+### All tests repeated N times
+
+Replace `<N>` with the number of repetitions.
+
+```bash
+cmake --build build && ctest --test-dir build --repeat until-fail:<N> --output-on-failure
+```
+
 ### Show all registered tests
 
 ```bash

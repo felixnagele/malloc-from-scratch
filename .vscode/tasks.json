@@ -11,6 +11,38 @@
       },
       "problemMatcher": [],
       "detail": "Build and Test task"
+    },
+    {
+      "type": "shell",
+      "label": "Build and Test (Repeat 10x)",
+      "command": "cmake --build build && ctest --test-dir build --repeat until-fail:10 --output-on-failure",
+      "group": "test",
+      "problemMatcher": [],
+      "detail": "Run all tests 10 times"
+    },
+    {
+      "type": "shell",
+      "label": "Build and Test (Repeat 100x)",
+      "command": "cmake --build build && ctest --test-dir build --repeat until-fail:100 --output-on-failure",
+      "group": "test",
+      "problemMatcher": [],
+      "detail": "Run all tests 100 times"
+    },
+    {
+      "type": "shell",
+      "label": "Build and Test (Repeat 1000x)",
+      "command": "cmake --build build && ctest --test-dir build --repeat until-fail:1000 --output-on-failure",
+      "group": "test",
+      "problemMatcher": [],
+      "detail": "Run all tests 1000 times"
+    },
+    {
+      "type": "shell",
+      "label": "Build and Test (Repeat 10000x)",
+      "command": "cmake --build build && ctest --test-dir build --repeat until-fail:10000 --output-on-failure",
+      "group": "test",
+      "problemMatcher": [],
+      "detail": "Run all tests 10000 times"
     }
   ]
 }
