@@ -9,7 +9,7 @@
   "editor.formatOnSave": true,
   "editor.formatOnPaste": false,
 
-  "editor.defaultFormatter": "prettier.prettier-vscode",
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
 
   "[cpp]": {
     "editor.defaultFormatter": "xaver.clang-format"
