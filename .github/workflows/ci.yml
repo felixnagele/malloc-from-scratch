@@ -67,7 +67,6 @@ jobs:
         run: ctest --test-dir build --output-on-failure -V
 
   ci-success:
-    name: CI Gateway
     needs: [format, lint-build-test]
     runs-on: ubuntu-latest
     if: always()
