@@ -6,109 +6,86 @@ on:
   pull_request:
     branches: [main]
   schedule:
-    - cron: "0 0 * * *" # Run daily at midnight UTC
+    - cron: "0 0 * * *"
   workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   format:
+    name: Format
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
-      - name: Install dependencies
+      - name: Install clang-format
         run: |
           sudo apt-get update
           sudo apt-get install -y clang-format
 
-      - name: Check C++ formatting
-        run: |
-          find src include tests -name "*.cpp" -o -name "*.h" | xargs clang-format --dry-run -Werror
+      - name: Check formatting
+        run: find src include tests -name "*.cpp" -o -name "*.h" | xargs clang-format --dry-run -Werror
 
-  lint:
+  lint-build-test:
+    name: Lint & Build & Test
+    needs: [format]
     runs-on: ubuntu-latest
-    needs: format
+    timeout-minutes: 15
+    permissions:
+      contents: read
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang-tidy cmake build-essential
+          sudo apt-get install -y clang-tidy cmake build-essential strace
 
       - name: Configure CMake
-        run: cmake -S . -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+        run: cmake -S . -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug
 
-      - name: Run static analysis
-        run: |
-          find src tests -name "*.cpp" -exec clang-tidy -p build {} \;
-
-  build:
-    runs-on: ubuntu-latest
-    needs: lint
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y cmake build-essential
-
-      - name: Configure
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+      - name: Linting (Clang-Tidy)
+        run: find src tests -name "*.cpp" -exec clang-tidy -p build {} \;
 
       - name: Build
-        run: cmake --build build
+        run: cmake --build build --parallel $(nproc)
 
-  test:
-    runs-on: ubuntu-latest
-    needs: build
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential cmake strace
-
-      - name: Configure
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
-
-      - name: Build
-        run: cmake --build build
-
-      - name: Run all tests
+      - name: Run Tests
         run: ctest --test-dir build --output-on-failure -V
 
   ci-success:
+    name: CI Gateway
+    needs: [format, lint-build-test]
     runs-on: ubuntu-latest
-    needs: [format, lint, build, test]
     if: always()
-
+    permissions: {}
     steps:
-      - name: Check all jobs
+      - name: Gateway Logic
         run: |
-          if [[ "${{ needs.format.result }}" != "success" ]]; then
-            echo "Format check failed"
+          RESULTS='${{ toJson(needs.*.result) }}'
+          echo "Job results to check: $RESULTS"
+
+          if echo "$RESULTS" | grep -qE 'failure|cancelled'; then
+            echo "Critical failure or cancellation detected in jobs."
             exit 1
           fi
-          if [[ "${{ needs.lint.result }}" != "success" ]]; then
-            echo "Lint check failed"
+
+          if [ "$RESULTS" = "[]" ] || [ -z "$RESULTS" ]; then
+            echo "No job results found. Check your configuration."
             exit 1
           fi
-          if [[ "${{ needs.build.result }}" != "success" ]]; then
-            echo "Build failed"
-            exit 1
-          fi
-          if [[ "${{ needs.test.result }}" != "success" ]]; then
-            echo "Tests failed"
-            exit 1
-          fi
-          echo "All checks passed!"
+
+          echo "All mandatory checks passed or were safely skipped."
