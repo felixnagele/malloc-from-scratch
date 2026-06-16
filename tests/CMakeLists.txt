@@ -48,8 +48,8 @@ foreach(test_file ${TEST_SOURCES})
 endforeach()
 
 # Add strace tests for all categories except those that would produce false positives
-# Default: strace enabled for ALL tests
-# Excluded only for specific categories
+# Default: strace enabled for most tests
+# Excluded for categories that produce false positives
 find_program(STRACE_EXECUTABLE strace)
 if(STRACE_EXECUTABLE)
     message(STATUS "strace found: ${STRACE_EXECUTABLE}")
