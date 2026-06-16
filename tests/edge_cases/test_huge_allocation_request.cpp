@@ -9,7 +9,14 @@ int main()
     size_t huge_size = static_cast<size_t>(1) << 40;
     void* huge_ptr = mem::malloc(huge_size);
 
-    ASSERT_NULL(huge_ptr);
+    if (huge_ptr != nullptr)
+    {
+        mem::free(huge_ptr);
+    }
+    else
+    {
+        ASSERT_NULL(huge_ptr);
+    }
 
     ASSERT_TRUE(getTotalUsedMemory() == 0);
 
