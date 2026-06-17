@@ -8,6 +8,7 @@ constexpr int allocs_per_thread = 100;
 
 void* thread_alloc_free(void* arg)
 {
+    (void)arg;
     for (int i = 0; i < allocs_per_thread; i++)
     {
         size_t size = 64 + (i % 256);

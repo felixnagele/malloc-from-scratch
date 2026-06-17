@@ -16,6 +16,17 @@ endif()
 set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -Wall -Wextra -Wpedantic")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
 
+option(WARNINGS_AS_ERRORS "Treat compiler warnings as errors" OFF)
+
+if(WARNINGS_AS_ERRORS)
+    message(STATUS "Warnings will be treated as errors")
+    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        add_compile_options(-Werror)
+    elseif(MSVC)
+        add_compile_options(/WX)
+    endif()
+endif()
+
 # Automatically find all .cpp files in src/ (including subdirectories)
 file(GLOB_RECURSE LIB_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 message(STATUS "Found library sources: ${LIB_SOURCES}")

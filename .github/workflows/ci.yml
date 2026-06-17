@@ -54,7 +54,7 @@ jobs:
           chmod +x tools/strace_test.sh
 
       - name: Configure CMake
-        run: cmake -S . -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug
+        run: cmake -S . -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug -DWARNINGS_AS_ERRORS=ON
 
       - name: Linting (Clang-Tidy)
         run: find src tests -name "*.cpp" -exec clang-tidy -p build {} \;
