@@ -8,7 +8,7 @@ int main()
     ASSERT_NOT_NULL(ptr);
 
     int* arr = static_cast<int*>(ptr);
-    for (int i = 0; i < amount; i++)
+    for (size_t i = 0; i < amount; i++)
     {
         ASSERT_TRUE(arr[i] == 0);
     }
