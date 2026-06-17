@@ -10,6 +10,7 @@ constexpr int operations_per_thread = 100;
 
 void* thread_malloc_only(void* arg)
 {
+    (void)arg;
     for (int i = 0; i < operations_per_thread; i++)
     {
         size_t size = 64 + (i * 4);
@@ -25,6 +26,7 @@ void* thread_malloc_only(void* arg)
 
 void* thread_calloc_only(void* arg)
 {
+    (void)arg;
     for (int i = 0; i < operations_per_thread; i++)
     {
         void* ptr = mem::calloc(10, 8 + i);
@@ -38,6 +40,7 @@ void* thread_calloc_only(void* arg)
 
 void* thread_realloc_only(void* arg)
 {
+    (void)arg;
     for (int i = 0; i < operations_per_thread; i++)
     {
         void* ptr = mem::malloc(32);
