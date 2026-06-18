@@ -1,16 +1,16 @@
 # malloc-from-scratch 🧩
 
-A custom memory allocator implementation in C++. This project implements malloc, free, calloc, and realloc from scratch using only native C++ (no external dependencies). This is done by using the system call `sbrk()` to manage memory at a low level.
+A custom memory allocator implementation in C++. This project implements malloc, free, calloc, and realloc from scratch using C++ with standard POSIX system libraries (sbrk, pthreads). This is done by using the system call `sbrk()` to manage memory at a low level.
 
 ![CI](https://github.com/felixnagele/malloc-from-scratch/workflows/CI/badge.svg)
 
 ## ✨ Features
 
 - Implements `malloc`, `free`, `calloc`, and `realloc` from scratch
-- Uses native C++ only (no external dependencies)
+- Uses C++ with standard POSIX system libraries only
 - Thread-safe via a global pthread mutex
 - Custom heap using sbrk()
-- Memory safety: canary values, double-free detection, buffer overflow protection
+- Memory safety: canary values, double-free safe, buffer overflow protection
 
 ## ⚠️ Known Limitations
 
@@ -22,7 +22,7 @@ A custom memory allocator implementation in C++. This project implements malloc,
 
 - CMake 3.14 or higher
 - C++17 compatible compiler
-- **No external libraries required** - 100% native C++
+- **No third-party libraries required** - only standard POSIX system libraries
 
 ## 🚀 Quick Start - Linux (Ubuntu/Debian)
 
@@ -36,7 +36,7 @@ cd malloc-from-scratch
 ### Step 2: Update and install build tools and dependencies
 
 ```bash
-sudo apt update && sudo sudo apt install -y build-essential cmake clang-format clang-tidy strace
+sudo apt update && sudo apt install -y build-essential cmake clang-format clang-tidy strace
 ```
 
 ### Step 3: Configure build directory
@@ -92,7 +92,7 @@ Example for Ubuntu/Debian:
 ### Verify installation
 
 ```bash
-gcc --version
+g++ --version
 cmake --version
 clang-format --version
 clang-tidy --version
@@ -104,13 +104,13 @@ strace --version
 #### Check formatting (what CI does)
 
 ```bash
-find src include tests -name "*.cpp" -o -name "*.h" | xargs clang-format --dry-run -Werror
+find src include tests \( -name "*.cpp" -o -name "*.h" \) | xargs clang-format --dry-run -Werror
 ```
 
 #### Auto-fix formatting
 
 ```bash
-find src include tests -name "*.cpp" -o -name "*.h" | xargs clang-format -i
+find src include tests \( -name "*.cpp" -o -name "*.h" \) | xargs clang-format -i
 ```
 
 ### Linting
