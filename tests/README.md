@@ -102,7 +102,7 @@ The project includes automatic memory leak detection using `strace`. If strace i
 
 - **Program break restoration**: Checks if `brk()` start address == end address
 - **No memory leaks**: Ensures all allocated memory is properly freed
-- **System call tracing**: Monitors `brk()`, `mmap()`, and `munmap()` calls
+- **System call tracing**: Monitors `brk()` calls
 
 ### How It Works
 
