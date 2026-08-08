@@ -1,6 +1,7 @@
 #include "malloc_from_scratch/memory_allocator.h"
 #include "malloc_from_scratch/memory_internal.h"
 
+#include <cstdint>
 #include <cstdlib>
 #include <unistd.h>
 
@@ -21,6 +22,11 @@ namespace internal
 void* malloc_no_lock(size_t size)
 {
     if (size == 0)
+    {
+        return nullptr;
+    }
+
+    if (size > SIZE_MAX - BLOCK_METADATA_SIZE - CANARY_SIZE)
     {
         return nullptr;
     }
@@ -84,6 +90,11 @@ void* malloc_no_lock(size_t size)
 
 void* increaseHeap(size_t size)
 {
+    if (size > static_cast<size_t>(INTPTR_MAX))
+    {
+        return nullptr;
+    }
+
     void* result = sbrk(static_cast<intptr_t>(size));
     if (result == getErrorCodeInVoidPtr(-1) || result == getErrorCodeInVoidPtr(0))
     {
