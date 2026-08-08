@@ -1,6 +1,5 @@
 #include "malloc_from_scratch/memory_allocator.h"
 #include "test_utils.h"
-#include <cstring>
 #include <vector>
 
 int main()
@@ -17,7 +16,7 @@ int main()
         {
             void* ptr = mem::malloc(16 + (i % 8));
             ASSERT_NOT_NULL(ptr);
-            std::memset(ptr, 'S', 16 + (i % 8));
+            fill_bytes(ptr, 16 + (i % 8), 'S');
             small_allocs.push_back(ptr);
         }
 
@@ -25,7 +24,7 @@ int main()
         {
             void* ptr = mem::malloc(256 + (i * 32));
             ASSERT_NOT_NULL(ptr);
-            std::memset(ptr, 'M', 256 + (i * 32));
+            fill_bytes(ptr, 256 + (i * 32), 'M');
             medium_allocs.push_back(ptr);
         }
 
@@ -33,17 +32,13 @@ int main()
         {
             void* ptr = mem::malloc(2048 + (i * 512));
             ASSERT_NOT_NULL(ptr);
-            std::memset(ptr, 'L', 2048 + (i * 512));
+            fill_bytes(ptr, 2048 + (i * 512), 'L');
             large_allocs.push_back(ptr);
         }
 
         void* zero_mem = mem::calloc(100, 4);
         ASSERT_NOT_NULL(zero_mem);
-        unsigned char* zero_data = static_cast<unsigned char*>(zero_mem);
-        for (int i = 0; i < 400; i++)
-        {
-            ASSERT_TRUE(zero_data[i] == 0);
-        }
+        check_bytes(zero_mem, 400, 0);
 
         for (int i = 0; i < 5; i++)
         {
@@ -55,6 +50,7 @@ int main()
         for (int i = 0; i < 5; i++)
         {
             mem::free(small_allocs[i * 4]);
+            small_allocs[i * 4] = nullptr;
         }
 
         for (void* ptr : large_allocs)

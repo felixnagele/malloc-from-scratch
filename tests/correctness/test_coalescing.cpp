@@ -1,64 +1,64 @@
 #include "malloc_from_scratch/memory_allocator.h"
 #include "test_utils.h"
-#include <cstring>
 
 int main()
 {
     ASSERT_TRUE(getTotalUsedMemory() == 0);
 
-    void* ptr1 = mem::malloc(32);
-    void* ptr2 = mem::malloc(32);
-    void* ptr3 = mem::malloc(32);
-    ASSERT_NOT_NULL(ptr1);
-    ASSERT_NOT_NULL(ptr2);
-    ASSERT_NOT_NULL(ptr3);
+    void* a = mem::malloc(32);
+    void* b = mem::malloc(32);
+    void* c = mem::malloc(32);
+    void* d = mem::malloc(32);
+    ASSERT_NOT_NULL(a);
+    ASSERT_NOT_NULL(b);
+    ASSERT_NOT_NULL(c);
+    ASSERT_NOT_NULL(d);
 
-    mem::free(ptr2);
-    size_t free_size_before = getFreeBlockInfo(1);
+    fill_bytes(a, 32, 'A');
+    fill_bytes(b, 32, 'B');
+    fill_bytes(c, 32, 'C');
+    fill_bytes(d, 32, 'D');
 
-    mem::free(ptr1);
-    size_t free_size_after = getFreeBlockInfo(1);
+    mem::free(b);
+    size_t single_block_size = getFreeBlockInfo(1);
+    ASSERT_TRUE(single_block_size == 32);
 
-    ASSERT_TRUE(free_size_after > free_size_before);
+    mem::free(c);
+    size_t merged_block_size = getFreeBlockInfo(1);
+    ASSERT_TRUE(merged_block_size > single_block_size);
 
-    mem::free(ptr3);
+    check_bytes(a, 32, 'A');
+    check_bytes(d, 32, 'D');
 
-    ASSERT_TRUE(getTotalUsedMemory() == 0);
+    void* reused = mem::malloc(64);
+    ASSERT_NOT_NULL(reused);
+    fill_bytes(reused, 64, 'X');
+    check_bytes(reused, 64, 'X');
 
-    for (int iter = 0; iter < 100; iter++)
-    {
-        void* blocks[5];
-        for (int i = 0; i < 5; i++)
-        {
-            size_t size = 64 + (i * 32);
-            blocks[i] = mem::malloc(size);
-            ASSERT_NOT_NULL(blocks[i]);
-            std::memset(blocks[i], 'A' + i, size);
-        }
-
-        mem::free(blocks[1]);
-        mem::free(blocks[3]);
-
-        void* new1 = mem::malloc(80);
-        void* new2 = mem::malloc(80);
-        ASSERT_NOT_NULL(new1);
-        ASSERT_NOT_NULL(new2);
-
-        unsigned char* b0 = static_cast<unsigned char*>(blocks[0]);
-        unsigned char* b2 = static_cast<unsigned char*>(blocks[2]);
-        unsigned char* b4 = static_cast<unsigned char*>(blocks[4]);
-
-        ASSERT_TRUE(b0[0] == 'A');
-        ASSERT_TRUE(b2[0] == 'C');
-        ASSERT_TRUE(b4[0] == 'E');
-
-        mem::free(blocks[0]);
-        mem::free(blocks[2]);
-        mem::free(blocks[4]);
-        mem::free(new1);
-        mem::free(new2);
-    }
+    mem::free(reused);
+    mem::free(a);
+    mem::free(d);
 
     ASSERT_TRUE(getTotalUsedMemory() == 0);
+
+    void* x = mem::malloc(32);
+    void* y = mem::malloc(32);
+    void* z = mem::malloc(32);
+    ASSERT_NOT_NULL(x);
+    ASSERT_NOT_NULL(y);
+    ASSERT_NOT_NULL(z);
+    fill_bytes(x, 32, 'X');
+    fill_bytes(y, 32, 'Y');
+    fill_bytes(z, 32, 'Z');
+
+    mem::free(y);
+    mem::free(z);
+
+    ASSERT_TRUE(getTotalUsedMemory() == 32);
+    check_bytes(x, 32, 'X');
+
+    mem::free(x);
+    ASSERT_TRUE(getTotalUsedMemory() == 0);
+
     TEST_PASS();
 }

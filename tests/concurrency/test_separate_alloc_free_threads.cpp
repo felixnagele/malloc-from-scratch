@@ -38,11 +38,7 @@ void* thread_free(void* arg)
 
     for (int i = 0; i < blocks_per_thread; i++)
     {
-        if (data->blocks[i] != nullptr)
-        {
-            mem::free(data->blocks[i]);
-            data->blocks[i] = nullptr;
-        }
+        mem::free(data->blocks[i]);
     }
 
     return nullptr;

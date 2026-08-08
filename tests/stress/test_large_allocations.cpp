@@ -43,25 +43,20 @@ int main()
 
     ASSERT_TRUE(getTotalUsedMemory() == 0);
 
-    char* block_x = static_cast<char*>(mem::malloc(1024));
-    char* block_y = static_cast<char*>(mem::malloc(2048));
-    ASSERT_NOT_NULL(block_x);
-    ASSERT_NOT_NULL(block_y);
+    char* block_c = static_cast<char*>(mem::malloc(large_size_1));
+    ASSERT_NOT_NULL(block_c);
 
-    std::memset(block_x, 0xAA, 1024);
-    std::memset(block_y, 0xBB, 2048);
-
-    for (int i = 0; i < 1024; i++)
+    for (size_t i = 0; i < large_size_1; i++)
     {
-        ASSERT_TRUE(block_x[i] == static_cast<char>(0xAA));
-    }
-    for (int i = 0; i < 2048; i++)
-    {
-        ASSERT_TRUE(block_y[i] == static_cast<char>(0xBB));
+        block_c[i] = static_cast<char>(i & 0xFF);
     }
 
-    mem::free(block_x);
-    mem::free(block_y);
+    for (size_t i = 0; i < large_size_1; i++)
+    {
+        ASSERT_TRUE(block_c[i] == static_cast<char>(i & 0xFF));
+    }
+
+    mem::free(block_c);
 
     ASSERT_TRUE(getTotalUsedMemory() == 0);
 
