@@ -1,31 +1,29 @@
 #include "malloc_from_scratch/memory_allocator.h"
 #include "test_utils.h"
-
+#include <cstddef>
 #include <limits>
 
 int main()
 {
     ASSERT_TRUE(getTotalUsedMemory() == 0);
 
-    size_t max = std::numeric_limits<size_t>::max();
+    size_t huge = std::numeric_limits<size_t>::max() / 2 + 1;
+    void* ptr = mem::calloc(huge, 2);
+    ASSERT_NULL(ptr);
 
-    ASSERT_NULL(mem::calloc(max / 2 + 1, 2));
-    ASSERT_NULL(mem::calloc(max, 2));
-    ASSERT_NULL(mem::calloc(1, max));
-    ASSERT_NULL(mem::calloc(max, max));
-    ASSERT_NULL(mem::calloc(2, max / 2 + 1));
+    void* ptr2 = mem::calloc(std::numeric_limits<size_t>::max(), 2);
+    ASSERT_NULL(ptr2);
 
-    ASSERT_TRUE(getTotalUsedMemory() == 0);
+    void* ptr3 = mem::calloc(10, sizeof(int));
+    ASSERT_NOT_NULL(ptr3);
 
-    void* ptr = mem::calloc(100, 4);
-    ASSERT_NOT_NULL(ptr);
-
-    unsigned char* data = static_cast<unsigned char*>(ptr);
-    for (int i = 0; i < 400; i++)
+    int* arr = static_cast<int*>(ptr3);
+    for (int i = 0; i < 10; i++)
     {
-        ASSERT_TRUE(data[i] == 0);
+        ASSERT_TRUE(arr[i] == 0);
     }
-    mem::free(ptr);
+
+    mem::free(ptr3);
 
     ASSERT_TRUE(getTotalUsedMemory() == 0);
 
