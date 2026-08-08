@@ -11,6 +11,7 @@ A custom memory allocator implementation in C++. This project implements malloc,
 - Thread-safe via a global pthread mutex
 - Custom heap using sbrk()
 - Memory safety: canary values, double-free safe, buffer overflow protection
+- Overflow-checked: extreme sizes near `SIZE_MAX` are rejected with `nullptr`
 
 ## ⚠️ Known Limitations
 
