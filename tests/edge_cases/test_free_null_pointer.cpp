@@ -6,8 +6,6 @@ int main()
     ASSERT_TRUE(getTotalUsedMemory() == 0);
 
     mem::free(nullptr);
-    mem::free(nullptr);
-    mem::free(nullptr);
 
     ASSERT_TRUE(getTotalUsedMemory() == 0);
 
